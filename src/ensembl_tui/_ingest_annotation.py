@@ -72,13 +72,31 @@ def migrate_schema(con: duckdb.DuckDBPyConnection, table_name: str) -> None:
     """
     sql = f"CREATE TABLE {table_name} AS SELECT * FROM mysqldb.{table_name} LIMIT 0"
     con.sql(sql)
-    # assume any column name ending with "strand" is a smallint (-1, 0, 1) for
-    # minus, unknown, plus strand
-    names = con.sql(f"DESCRIBE {table_name}").to_df()
+    sql = f"""
+    SELECT column_name FROM information_schema.columns
+    WHERE table_name = '{table_name}'
+    AND column_name LIKE '%strand'"""
+    names = con.sql(sql).to_df()
     for n in names["column_name"].to_list():
         if n.endswith("strand"):
+            # assume any column name ending with "strand" is a
+            # smallint (-1, 0, 1) for minus, unknown, plus strand
             sql = f"ALTER TABLE {table_name} ALTER COLUMN {n} SET DATA TYPE TINYINT;"
             con.sql(sql)
+
+    # change all timestamp columns to text
+    # this is required because duckdb import does not handle null timestamps
+    # like '0000-00-00 00:00:00'
+    sql = f"""
+    SELECT column_name
+    FROM information_schema.columns
+    WHERE table_name = {table_name}
+    AND data_type = 'TIMESTAMP';
+    """
+    names = con.sql(f"DESCRIBE {table_name}").to_df()
+    for n in names["column_name"].to_list():
+        sql = f"ALTER TABLE {table_name} ALTER COLUMN {n} SET DATA TYPE TEXT;"
+        con.sql(sql)
 
 
 def make_mysql_connection(
