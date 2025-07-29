@@ -3,13 +3,14 @@
 [![Coverage Status](https://coveralls.io/repos/github/cogent3/ensembl_tui/badge.svg?branch=develop)](https://coveralls.io/github/cogent3/ensembl_tui?branch=develop)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![DOI](https://zenodo.org/badge/664119735.svg)](https://doi.org/10.5281/zenodo.15098645)
+[![DOI](https://app.readthedocs.org/projects/ensembl-tui/badge/?version=latest)](https://ensembl-tui.readthedocs.io/en/latest/)
 
 # ensembl-tui
 
 ensembl-tui provides the `eti` terminal application for obtaining a subset of the data provided by Ensembl which can then be queried locally. You can have multiple such subsets on your machine, each corresponding to a different selection of species and data types.
 
 > **Warning**
-> ensembl-tui is in a preliminary phase of development with a limited feature set and incomplete test coverage! We currently **only support accessing data from the main ensembl.org** site. Please validate results against the web version. If you discover errors, please post a [bug report](https://github.com/cogent3/ensembl_tui/issues).
+> We currently **only support accessing data from the main ensembl.org** site. If you discover errors, please post a [bug report](https://github.com/cogent3/ensembl_tui/issues).
 
 ## Installing the software
 
@@ -67,14 +68,15 @@ Some commands can be run in parallel but have moderate memory requirements. If y
     exports sample config and species table to the nominated path
 
   Options:
-    -o, --outpath PATH  Path to directory to export all rc contents.
-    --help              Show this message and exit.
+    -o, --outpath PATH     Path to directory to export all rc contents.
+    -f, --force_overwrite  Overwrite existing data.
+    --help                 Show this message and exit.
 
   ```
   <!-- [[[end]]] -->
 
   ```shell
-  $ eti demo-config -o ~/Desktop/Outbox/ensembl_download
+  $ eti demo-config -o ensembl_download
   ```
   This command creates a `ensembl_download` download directory and writes two plain text files into it:
 
