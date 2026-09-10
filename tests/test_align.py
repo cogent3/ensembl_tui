@@ -451,6 +451,52 @@ def test_align_db_get_records_required_only(coord):
     assert len(got) == 2
 
 
+def test_align_db_get_records_block_within_query():
+    """blocks lying wholly inside the query interval must be returned
+
+    Previously only blocks containing the query start or the query stop
+    were matched, so all interior blocks were silently dropped.
+    """
+    agg = empty_align_agg_gap_store()
+    # three consecutive, non-overlapping blocks tiling s1
+    num_blocks = 3
+    for i, (start, end) in enumerate(((1, 3), (3, 5), (5, 7))):
+        eti_ingest_align.add_records(
+            records=make_records(start, end, i),
+            conn=agg,
+        )
+    db = eti_align.AlignDb(db=agg, source=":memory:")
+    human = next(r for r in make_records(1, 7, 99) if r.species == "human")
+    # a query spanning all three blocks, so the middle one is interior
+    got = list(
+        db.get_records_matching(
+            species="human",
+            seqid=human.seqid,
+            start=human.start,
+            stop=human.stop,
+        ),
+    )
+    assert len(got) == num_blocks
+
+
+def test_align_db_get_records_excludes_adjacent_blocks():
+    """half-open bounds, so a block merely abutting the query is not a match"""
+    agg = empty_align_agg_gap_store()
+    for i, (start, end) in enumerate(((1, 3), (3, 5))):
+        eti_ingest_align.add_records(records=make_records(start, end, i), conn=agg)
+    db = eti_align.AlignDb(db=agg, source=":memory:")
+    first = next(r for r in make_records(1, 3, 0) if r.species == "human")
+    got = list(
+        db.get_records_matching(
+            species="human",
+            seqid=first.seqid,
+            start=first.start,
+            stop=first.stop,
+        ),
+    )
+    assert len(got) == 1
+
+
 @pytest.mark.parametrize(
     "coord",
     [

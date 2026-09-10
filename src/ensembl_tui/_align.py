@@ -133,9 +133,11 @@ class AlignDb(eti_storage.DuckdbParquetBase):
         sql = f"SELECT block_id from {self._tables[0]} WHERE species = ? AND seqid = ?"
         values = species, seqid
         if start is not None and stop is not None:
-            # as long as start or stop are within the record start/stop, it's a match
-            sql = f"{sql} AND ((start <= ? AND ? < stop) OR (start <= ? AND ? < stop))"
-            values += (start, start, stop, stop)
+            # a block matches if it overlaps the query interval at all. Testing
+            # whether the query bounds fall inside a block instead would miss
+            # every block lying wholly within the query interval.
+            sql = f"{sql} AND start < ? AND ? < stop"
+            values += (stop, start)
         elif start is not None:
             # the aligned segment overlaps start
             sql = f"{sql} AND start <= ? AND ? < stop"
